@@ -1,6 +1,7 @@
 package com.example.feedarticlesjetpackcompose.data.api
 
 
+import android.view.PixelCopy.Request
 import com.example.feedarticlesjetpackcompose.data.dto.request.AuthRequestDto
 import com.example.feedarticlesjetpackcompose.data.dto.request.PostArticleDto
 import com.example.feedarticlesjetpackcompose.data.dto.request.UpdateArticleDto
@@ -51,7 +52,7 @@ interface ApiInterface {
     suspend fun postNewArticle(
         @Header("Authorization") authorization: String,
         @Body article: PostArticleDto
-    ): Response<ResponseApiDto>?
+    ): Response<Unit>?
 
     @POST(ApiRoutes.POST_UPDATE_ARTICLE)
     suspend fun updateArticle(

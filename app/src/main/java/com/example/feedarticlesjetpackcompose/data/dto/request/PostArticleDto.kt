@@ -15,3 +15,4 @@ data class PostArticleDto(
     @Json(name = "id_u")
     var userId: Int ,
 )
+

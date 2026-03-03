@@ -1,7 +1,9 @@
 package com.example.feedarticlesjetpackcompose.presentation.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -11,6 +13,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -49,10 +52,13 @@ fun FATextField(
     label: String,
     isPassword: Boolean = false,
     supportingText: String? = null,
-    minLines : Int? = 1
+    minLines : Int? = 1,
+    maxLines : Int? = 5,
+    modifier : Modifier? = Modifier
 ) {
 
     TextField(
+        modifier = modifier ?: Modifier,
         value = value,
         onValueChange = onValueChange,
         label = {
@@ -75,7 +81,8 @@ fun FATextField(
                 Text(it)
             }
         },
-        minLines = minLines ?: 1
+        minLines = minLines ?: 1,
+        maxLines = maxLines ?:5
     )
 
 }

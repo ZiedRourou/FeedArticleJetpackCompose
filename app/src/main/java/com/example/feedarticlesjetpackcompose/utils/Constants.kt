@@ -31,4 +31,8 @@ sealed class Category(
     data object Anime : Category("Manga", 1, Color.Red)
     data object Sport : Category("Sport", 2, Color.LightGray)
     data object Diverse : Category("Divers", 3, Color.Yellow)
+    data object All : Category("Tous", 0, Color.Blue)
 }
+
+val categoriesEditOrCreate  = arrayOf(Category.Anime,Category.Sport,Category.Diverse)
+val categoriesHomeFilter  = arrayOf(Category.All,Category.Anime,Category.Sport,Category.Diverse)

@@ -2,11 +2,13 @@ package com.example.feedarticlesjetpackcompose.presentation.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.feedarticlesjetpackcompose.presentation.screens.createArticle.CreateArticleScreen
-import com.example.feedarticlesjetpackcompose.presentation.screens.createArticle.CreateArticleViewModel
+import androidx.navigation.navArgument
+import com.example.feedarticlesjetpackcompose.presentation.screens.createOrEditArticle.CreateArticleScreen
+import com.example.feedarticlesjetpackcompose.presentation.screens.createOrEditArticle.CreateOrEditArticleViewModel
 import com.example.feedarticlesjetpackcompose.presentation.screens.home.HomeScreen
 import com.example.feedarticlesjetpackcompose.presentation.screens.home.HomeViewModel
 import com.example.feedarticlesjetpackcompose.presentation.screens.login.LoginScreen
@@ -21,8 +23,8 @@ sealed class Screen(val route: String) {
     data object Home : Screen("home")
     data object Login : Screen("user_login")
     data object Register : Screen("user_register")
-    data object ArticleDetails : Screen("article_details")
     data object CreateArticle : Screen("new_article")
+    data object EditArticle : Screen("edit_article")
 }
 
 
@@ -52,9 +54,29 @@ fun AppNavHost() {
         }
 
         composable(Screen.CreateArticle.route) {
-            val createArticleViewModel: CreateArticleViewModel = hiltViewModel()
-            CreateArticleScreen(navController = navController, viewModel =createArticleViewModel )
+            val createArticleViewModel: CreateOrEditArticleViewModel = hiltViewModel()
+            CreateArticleScreen(
+                navController = navController,
+                viewModel = createArticleViewModel,
+                0
+            )
         }
 
+        composable(Screen.EditArticle.route + "/{articleId}",
+            arguments = listOf(
+                navArgument("articleId") {
+                    type = NavType.IntType
+                }
+            )) { navBackStack ->
+
+            val articleId = navBackStack.arguments?.getInt("articleId") ?: 0
+
+            val createArticleViewModel: CreateOrEditArticleViewModel = hiltViewModel()
+            CreateArticleScreen(
+                navController = navController,
+                viewModel = createArticleViewModel,
+                articleId = articleId
+            )
+        }
     }
 }

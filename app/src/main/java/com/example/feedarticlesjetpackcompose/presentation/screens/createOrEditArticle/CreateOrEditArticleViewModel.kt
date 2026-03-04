@@ -1,16 +1,16 @@
-package com.example.feedarticlesjetpackcompose.presentation.screens.createArticle
+package com.example.feedarticlesjetpackcompose.presentation.screens.createOrEditArticle
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.feedarticlesjetpackcompose.data.dto.request.AuthRequestDto
 import com.example.feedarticlesjetpackcompose.data.dto.request.PostArticleDto
+import com.example.feedarticlesjetpackcompose.data.dto.request.UpdateArticleDto
 import com.example.feedarticlesjetpackcompose.data.local.AuthSharedPref
 import com.example.feedarticlesjetpackcompose.data.repository.ArticleRepository
 import com.example.feedarticlesjetpackcompose.data.repository.Resource
 import com.example.feedarticlesjetpackcompose.presentation.navigation.Screen
-import com.example.feedarticlesjetpackcompose.presentation.screens.register.RegisterViewModel
 import com.example.feedarticlesjetpackcompose.utils.Category
+import com.example.feedarticlesjetpackcompose.utils.categoriesEditOrCreate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -24,16 +24,17 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-class CreateArticleViewModel @Inject constructor(
+class CreateOrEditArticleViewModel @Inject constructor(
     private val articleRepository: ArticleRepository,
     private val authSharedPref: AuthSharedPref
 ) : ViewModel() {
 
     data class CreateArticleInfoState(
+        val articleId: Int = 0,
         val title: String = "",
         val content: String = "",
         val imageUrl: String = "",
-        val selectedCategory: Category = Category.Anime,
+        val selectedCategory: Category = Category.Diverse,
         val categoriesOptions: List<Category> = listOf(
             Category.Sport,
             Category.Anime,
@@ -43,7 +44,7 @@ class CreateArticleViewModel @Inject constructor(
         val titleError: String? = null,
         val contentError: String? = null,
         val selectedCategoryError: String? = null,
-
+        val editorMode: Boolean = false,
         val isLoading: Boolean = false
     )
 
@@ -67,6 +68,20 @@ class CreateArticleViewModel @Inject constructor(
             )
         }
     }
+
+    fun isAuthor(articleId: Int) {
+        if (articleId != 0) {
+            _createArticleInfoStateFlow.update {
+                it.copy(
+                    editorMode = true,
+                    articleId = articleId
+                )
+            }
+
+            fetchArticle(articleId)
+        }
+    }
+
 
     fun onChangeContent(content: String) {
         _createArticleInfoStateFlow.update {
@@ -92,13 +107,142 @@ class CreateArticleViewModel @Inject constructor(
         }
     }
 
+    fun fetchArticle(articleId: Int) {
 
-    fun postArticle() {
+        viewModelScope.launch {
+            _createArticleInfoStateFlow.update {
+                it.copy(
+                    isLoading = true
+                )
+            }
+
+            val result = withContext(Dispatchers.IO) {
+                articleRepository.getArticleById(articleId)
+            }
+
+
+            when (result) {
+
+                is Resource.Success -> {
+                    _createArticleInfoStateFlow.update {
+                        it.copy(
+                            isLoading = false
+                        )
+                    }
+                    result.data?.let { article ->
+                        _createArticleInfoStateFlow.update { it ->
+                            it.copy(
+                                title = article.title,
+                                content = article.content,
+                                imageUrl = article.urlImage,
+                                selectedCategory = categoriesEditOrCreate.first { it.id == article.categoryId }
+                            )
+                        }
+                    }
+                }
+
+                is Resource.Error -> {
+                    _createArticleInfoStateFlow.update {
+                        it.copy(
+                            isLoading = false
+                        )
+                    }
+
+//                    if(result.code == 422 || result.code == 401){
+//                        authSharedPref.clearLogin()
+////                        _createArticleEventSharedFlow.emit(
+////                            CreateArticleEventState.ShowError("vous allez etre déconnecter ")
+////                        )
+////                        delay(3000)
+////                        _createArticleEventSharedFlow.emit(
+////                            CreateArticleEventState.RedirectScreen(Screen.Login)
+////                        )
+//                    }
+                    _createArticleEventSharedFlow.emit(
+                        CreateArticleEventState.ShowError("Erreur serveur")
+                    )
+
+                    Log.e("Login view Model", result.code.toString())
+                }
+            }
+        }
+    }
+
+    fun submitForm() {
 
         if (!validateArticleData()) {
             return
         }
 
+        if (articleFormStateFlow.value.editorMode) {
+            updateArticle()
+        } else
+            postArticle()
+
+    }
+
+    private fun updateArticle() {
+        viewModelScope.launch {
+
+            _createArticleInfoStateFlow.update {
+                it.copy(
+                    isLoading = true
+                )
+            }
+
+            val result = withContext(Dispatchers.IO) {
+                articleRepository.updateArticle(
+                    articleId = articleFormStateFlow.value.articleId,
+                    updateArticleDto = UpdateArticleDto(
+                        id = articleFormStateFlow.value.articleId,
+                        title = articleFormStateFlow.value.title,
+                        content = articleFormStateFlow.value.content,
+                        imageUrl = articleFormStateFlow.value.imageUrl,
+                        categoryId = articleFormStateFlow.value.selectedCategory.id,
+                    )
+                )
+            }
+            when (result) {
+
+                is Resource.Success -> {
+                    _createArticleInfoStateFlow.update {
+                        it.copy(
+                            isLoading = false
+                        )
+                    }
+                    _createArticleEventSharedFlow.emit(
+                        CreateArticleEventState.RedirectScreen(Screen.Home)
+                    )
+                }
+
+                is Resource.Error -> {
+                    _createArticleInfoStateFlow.update {
+                        it.copy(
+                            isLoading = false
+                        )
+                    }
+
+                    if (result.code == 422 || result.code == 401) {
+                        authSharedPref.clearLogin()
+                        _createArticleEventSharedFlow.emit(
+                            CreateArticleEventState.ShowError("vous allez etre déconnecter ")
+                        )
+                        delay(3000)
+                        _createArticleEventSharedFlow.emit(
+                            CreateArticleEventState.RedirectScreen(Screen.Login)
+                        )
+                    }
+                    _createArticleEventSharedFlow.emit(
+                        CreateArticleEventState.ShowError("Erreur serveur")
+                    )
+
+                    Log.e("Login view Model", result.code.toString())
+                }
+            }
+        }
+    }
+
+    private fun postArticle() {
         viewModelScope.launch {
 
             _createArticleInfoStateFlow.update {
@@ -142,7 +286,7 @@ class CreateArticleViewModel @Inject constructor(
                         )
                     }
 
-                    if(result.code == 422 || result.code == 401){
+                    if (result.code == 422 || result.code == 401) {
                         authSharedPref.clearLogin()
                         _createArticleEventSharedFlow.emit(
                             CreateArticleEventState.ShowError("vous allez etre déconnecter ")

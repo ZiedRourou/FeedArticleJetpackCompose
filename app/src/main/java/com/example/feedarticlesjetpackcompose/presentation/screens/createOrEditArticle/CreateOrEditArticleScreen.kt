@@ -1,8 +1,7 @@
-package com.example.feedarticlesjetpackcompose.presentation.screens.createArticle
+package com.example.feedarticlesjetpackcompose.presentation.screens.createOrEditArticle
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,13 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -26,7 +20,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,10 +28,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,24 +40,27 @@ import com.example.feedarticlesjetpackcompose.R
 import com.example.feedarticlesjetpackcompose.presentation.components.FAPrimaryTitle
 import com.example.feedarticlesjetpackcompose.presentation.components.FATextField
 import com.example.feedarticlesjetpackcompose.presentation.navigation.Screen
-import com.example.feedarticlesjetpackcompose.ui.theme.FeedArticlesJetpackComposeTheme
 import com.example.feedarticlesjetpackcompose.utils.Category
 
 @Composable
 fun CreateArticleScreen(
     navController: NavController,
-    viewModel: CreateArticleViewModel
+    viewModel: CreateOrEditArticleViewModel,
+    articleId : Int,
 ) {
+
+    viewModel.isAuthor(articleId)
+
     val articleInfo by viewModel.articleFormStateFlow.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
     LaunchedEffect("single") {
         viewModel.createArticleEventSharedFlow.collect { event ->
             when (event) {
 
-                is CreateArticleViewModel.CreateArticleEventState.ShowError ->
+                is CreateOrEditArticleViewModel.CreateArticleEventState.ShowError ->
                     snackBarHostState.showSnackbar(event.message)
 
-                is CreateArticleViewModel.CreateArticleEventState.RedirectScreen ->
+                is CreateOrEditArticleViewModel.CreateArticleEventState.RedirectScreen ->
                     navController.navigate(event.screen.route) {
                         if (event.screen is Screen.Login)
                             popUpTo(Screen.Home.route) { inclusive = true }
@@ -82,7 +75,7 @@ fun CreateArticleScreen(
             CreateArticleContent(
                 paddingVal,
                 articleInfoState = articleInfo,
-                onSubmitForm = viewModel::postArticle,
+                onSubmitForm = viewModel::submitForm,
                 onChangeContent = viewModel::onChangeContent,
                 onChangeTitle = viewModel::onChangeTitle,
                 onChangeImageUrl = viewModel::onChangeImageUrl,
@@ -95,7 +88,7 @@ fun CreateArticleScreen(
 @Composable
 private fun CreateArticleContent(
     paddingValues: PaddingValues,
-    articleInfoState: CreateArticleViewModel.CreateArticleInfoState,
+    articleInfoState: CreateOrEditArticleViewModel.CreateArticleInfoState,
     onSubmitForm: () -> Unit,
     onChangeTitle: (String) -> Unit,
     onChangeContent: (String) -> Unit,
@@ -180,13 +173,13 @@ private fun CreateArticleContent(
                 }
             }
         }
-
         Button(
             onClick = { onSubmitForm() },
             Modifier.width(250.dp)
         ) {
-            Text(text = "Enregister")
+            Text(text = if (articleInfoState.editorMode) "Mettre a jour" else "Enregistrer")
         }
+
     }
 }
 
@@ -197,21 +190,21 @@ private fun PreviewCreateArticle() {
     val options = listOf("Sport", "Manga", "Divers")
     val selectedOption = remember { mutableStateOf(options[0]) }
 
-    FeedArticlesJetpackComposeTheme {
-        CreateArticleContent(
-            paddingValues = PaddingValues(),
-            onSubmitForm = {},
-            articleInfoState = CreateArticleViewModel.CreateArticleInfoState(
-                "",
-                "",
-                "",
-                Category.Diverse, listOf(Category.Diverse, Category.Anime, Category.Sport)
-            ),
-
-            onChangeTitle = { },
-            onChangeContent = {},
-            onChangeImageUrl = {},
-            onSelectCategory = {}
-        )
-    }
+//    FeedArticlesJetpackComposeTheme {
+//        CreateArticleContent(
+//            paddingValues = PaddingValues(),
+//            onSubmitForm = {},
+//            articleInfoState = CreateArticleViewModel.CreateArticleInfoState(
+//                "",
+//                "",
+//                "",
+//                Category.Diverse, listOf(Category.Diverse, Category.Anime, Category.Sport)
+//            ),
+//
+//            onChangeTitle = { },
+//            onChangeContent = {},
+//            onChangeImageUrl = {},
+//            onSelectCategory = {}
+//        )
+//    }
 }

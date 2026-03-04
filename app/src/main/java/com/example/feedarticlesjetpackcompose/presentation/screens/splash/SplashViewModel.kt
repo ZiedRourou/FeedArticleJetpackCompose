@@ -16,7 +16,7 @@ class SplashViewModel @Inject constructor(
     private val authSharedPref: AuthSharedPref
 ) : ViewModel() {
 
-    private val _navDirectionsRouteSharedFlow = MutableSharedFlow<String>()
+    private val _navDirectionsRouteSharedFlow = MutableSharedFlow<Screen>()
     val navDirectionsRouteSharedFlow = _navDirectionsRouteSharedFlow.asSharedFlow()
 
     init {
@@ -26,11 +26,10 @@ class SplashViewModel @Inject constructor(
     private fun switchNavigation() {
         viewModelScope.launch {
             delay(2000)
-
             if (authSharedPref.isLogin()) {
-                _navDirectionsRouteSharedFlow.emit(Screen.Home.route)
+                _navDirectionsRouteSharedFlow.emit(Screen.Home)
             } else {
-                _navDirectionsRouteSharedFlow.emit(Screen.Login.route)
+                _navDirectionsRouteSharedFlow.emit(Screen.Login)
             }
         }
     }

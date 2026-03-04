@@ -32,6 +32,7 @@ class LoginViewModel @Inject constructor(
 
         val loginError: String? = null,
         val passwordError: String? = null,
+
         val isLoading: Boolean = false
     )
 
@@ -162,5 +163,7 @@ class LoginViewModel @Inject constructor(
 
         return isValid
     }
+
+
 }
 

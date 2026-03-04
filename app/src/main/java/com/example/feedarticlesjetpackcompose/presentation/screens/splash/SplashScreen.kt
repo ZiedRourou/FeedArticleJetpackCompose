@@ -29,41 +29,12 @@ fun SplashScreen(
 ) {
 
     LaunchedEffect(Unit) {
-        viewModel.navDirectionsRouteSharedFlow.collect { route ->
-            navController.navigate(route) {
+        viewModel.navDirectionsRouteSharedFlow.collect { event ->
+            navController.navigate(event.route) {
                 popUpTo(Screen.Splash.route) { inclusive = true }
             }
         }
     }
+
     SplashContent()
-}
-
-@Composable
-private fun SplashContent() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary),
-        verticalArrangement = Arrangement.SpaceEvenly,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.feedarticles_logo),
-            contentDescription = null,
-            modifier = Modifier.size(200.dp),
-        )
-        Text(
-            text = "FeedArticle",
-            color = MaterialTheme.colorScheme.background,
-            style = MaterialTheme.typography.displayMedium
-        )
-    }
-}
-
-@Preview(apiLevel = 33, showBackground = true)
-@Composable
-private fun PreviewSplash() {
-    FeedArticlesJetpackComposeTheme {
-        SplashContent()
-    }
 }

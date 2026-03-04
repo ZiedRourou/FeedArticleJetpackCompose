@@ -1,11 +1,12 @@
 package com.example.feedarticlesjetpackcompose.presentation.screens.home
 
-import android.graphics.drawable.PaintDrawable
-import android.widget.RadioGroup
-import androidx.compose.foundation.Image
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -17,44 +18,59 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PowerSettingsNew
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.outlined.AccountBox
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.modifier.modifierLocalConsumer
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.feedarticlesjetpackcompose.R
-import com.example.feedarticlesjetpackcompose.presentation.components.FAPrimaryTitle
-import com.example.feedarticlesjetpackcompose.presentation.components.FATextField
+import com.example.feedarticlesjetpackcompose.data.dto.response.ArticleResponseDto
 import com.example.feedarticlesjetpackcompose.presentation.navigation.Screen
-import com.example.feedarticlesjetpackcompose.presentation.screens.login.LoginViewModel
 import com.example.feedarticlesjetpackcompose.ui.theme.FeedArticlesJetpackComposeTheme
+import com.example.feedarticlesjetpackcompose.utils.Category
+import com.example.feedarticlesjetpackcompose.utils.categoriesEditOrCreate
+import com.example.feedarticlesjetpackcompose.utils.categoriesHomeFilter
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 
 @Composable
@@ -63,26 +79,27 @@ fun HomeScreen(
     viewModel: HomeViewModel
 ) {
 
-//    val userLoginInfo by viewModel.loginUserInfo.collectAsState()
+    val articles by viewModel.homeStateFlow.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
-    val options = listOf("Tout", "Sport", "Manga", "Divers")
-    val selectedOption = remember { mutableStateOf(options[0]) }
 
 
     LaunchedEffect("single") {
-        viewModel.homeEventSharedFlow.collect {event ->
+        viewModel.homeEventSharedFlow.collect { event ->
             when (event) {
 
                 is HomeViewModel.HomeEventState.ShowError ->
                     snackBarHostState.showSnackbar(event.message)
 
-                is HomeViewModel.HomeEventState.RedirectScreen ->{
-                    if(event.screen is Screen.Login){
-                        navController.navigate(event.screen.route){
+                is HomeViewModel.HomeEventState.RedirectScreen -> {
+                    if (event.screen is Screen.Login) {
+                        navController.navigate(event.screen.route) {
                             popUpTo(Screen.Home.route) { inclusive = true }
                         }
-                    }else
+                    } else
                         navController.navigate(event.screen.route)
+                }
+                is HomeViewModel.HomeEventState.RedirectEditScreen -> {
+                    navController.navigate(event.screen)
                 }
             }
         }
@@ -99,14 +116,19 @@ fun HomeScreen(
         content = { paddingVal ->
             HomeContent(
                 paddingVal,
-//                userLoginInfo,
-//                onLoginChange = viewModel::onLoginChange,
-//                onPasswordChange = viewModel::onPasswordChange,
-//                onSubmitForm = viewModel::loginUser,
-//                onRegisterScreen = viewModel::onRegisterScreen
+                articles,
+                onDelete = viewModel::onDeleteArticle,
+                isAuthor = viewModel::isAuthor,
+                onClickItem = viewModel::onClickItem
             )
         },
-        bottomBar = { BottomBarHome(listOptions = options, selectedOption =selectedOption )}
+        bottomBar = {
+            BottomBarHome(
+                listOptions = articles.categoriesOptions,
+                selectedOption = articles.selectedCategory,
+                onSelectCategory = viewModel::onSelectCategory
+            )
+        }
     )
 }
 
@@ -142,30 +164,33 @@ private fun TopBarHomeContent(
 
 @Composable
 private fun BottomBarHome(
-    listOptions : List<String>,
-    selectedOption : MutableState<String>
+    listOptions: Array<Category>,
+    selectedOption: Category,
+    onSelectCategory: (Category) -> Unit
+
 ) {
     Row(
-        modifier = Modifier.padding(horizontal = 5.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 5.dp),
+        horizontalArrangement = Arrangement.Center
     ) {
 
         listOptions.forEach { option ->
-            Row (
+            Row(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
 
-                ) {
+                    ) {
                     RadioButton(
-                        selected = selectedOption.value == option,
-                        onClick = { selectedOption.value = option }
+                        selected = selectedOption.id == option.id,
+                        onClick = { onSelectCategory(option) }
                     )
-                    Text(option, style = MaterialTheme.typography.bodyLarge)
+                    Text(option.name, style = MaterialTheme.typography.labelMedium)
                 }
-
             }
-
         }
     }
 }
@@ -173,11 +198,10 @@ private fun BottomBarHome(
 @Composable
 private fun HomeContent(
     paddingValues: PaddingValues,
-//    userLogin: LoginViewModel.LoginInfoState,
-//    onLoginChange: (String) -> Unit,
-//    onPasswordChange: (String) -> Unit,
-//    onSubmitForm: () -> Unit,
-//    onRegisterScreen: ( )->Unit
+    articles: HomeViewModel.HomeState,
+    onDelete: (Int) -> Unit,
+    isAuthor: (Int) -> Boolean,
+    onClickItem: (Boolean,ArticleResponseDto) -> Boolean
 ) {
 
     Column(
@@ -186,58 +210,149 @@ private fun HomeContent(
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
-            .background(MaterialTheme.colorScheme.background)
     ) {
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ){
-            items(11) { item ->
-
-                ItemArticle("test", onClickArticle = {})
+        if (articles.filteredArticles != null)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(
+                    items = articles.filteredArticles,
+                    key = { article -> article.id }
+                )
+                { item ->
+                    SwipeBox(
+                        onDelete = { onDelete(item.id) },
+                        enableSwipe = isAuthor(item.idUserAuthor),
+                        content = {
+                            ItemArticle(
+                                article = item,
+                                onClick = onClickItem
+                            )
+                        }
+                    )
+                }
             }
-        }
+
 
     }
 }
 
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeBox(
+    onDelete: () -> Unit,
+    content: @Composable () -> Unit,
+    enableSwipe: Boolean
+) {
+    val swipeState = rememberSwipeToDismissBoxState()
+
+    SwipeToDismissBox(
+        modifier = Modifier.padding(horizontal = 10.dp),
+        state = swipeState,
+        backgroundContent = {
+            Box(
+                contentAlignment = Alignment.CenterEnd,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.errorContainer)
+            ) {
+                Icon(
+                    modifier = Modifier.minimumInteractiveComponentSize(),
+                    imageVector = Icons.Outlined.Delete, contentDescription = null
+                )
+            }
+        },
+        enableDismissFromStartToEnd = false,
+        enableDismissFromEndToStart = enableSwipe
+    ) {
+            content()
+    }
+
+    if (swipeState.currentValue == SwipeToDismissBoxValue.EndToStart)
+        onDelete()
+}
+
+
 @Composable
 private fun ItemArticle(
-    titleArticle : String,
-    onClickArticle : () -> Unit
-){
-    Card (
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 10.dp)
-            .clickable {
-                       onClickArticle()
-            }
-        ,
+    article: ArticleResponseDto,
+    onClick : (Boolean,ArticleResponseDto) -> Boolean
+) {
+    var expandedState by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxSize(),
+        colors = CardDefaults.cardColors(
+            categoriesEditOrCreate.firstOrNull { it.id == article.categoryId }?.color
+                ?: Color.LightGray
+        ),
+
+        onClick = {
+            expandedState = onClick(expandedState,article)
+        },
     ) {
-        Row (
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
-        ){
-            Image(
-                painter = painterResource(id = R.drawable.feedarticles_logo),
-                contentDescription =null,
-                Modifier
-                    .size(50.dp)
-                    .clip(CircleShape),
+        ) {
+
+            AsyncImage(
+                model = if (article.urlImage.isEmpty()) null else ImageRequest
+                    .Builder(LocalContext.current)
+                    .data(article.urlImage).crossfade(true).build(),
+                placeholder = painterResource(id = R.drawable.feedarticles_logo),
+                contentDescription = null,
+                modifier = Modifier.size(50.dp),
+                error = painterResource(id = R.drawable.feedarticles_logo),
             )
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = titleArticle,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
+                text = article.title,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
             )
+        }
+
+        if (expandedState) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(10.dp),
+                    verticalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(text = article.createdAt)
+                        Text(text = Category.Sport.name)
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            text = article.content,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -248,7 +363,6 @@ private fun ItemArticle(
 private fun PreviewHome() {
     val options = listOf("Tout", "Sport", "Manga", "Divers")
     val selectedOption = remember { mutableStateOf(options[0]) }
-
 
     FeedArticlesJetpackComposeTheme {
         Scaffold(
@@ -261,14 +375,43 @@ private fun PreviewHome() {
             content = { paddingVal ->
                 HomeContent(
                     paddingVal,
-//                userLoginInfo,
-//                onLoginChange = viewModel::onLoginChange,
-//                onPasswordChange = viewModel::onPasswordChange,
-//                onSubmitForm = viewModel::loginUser,
-//                onRegisterScreen = viewModel::onRegisterScreen
+                    articles = HomeViewModel.HomeState(
+                        filteredArticles =
+                        listOf(
+                            ArticleResponseDto(
+                                0,
+                                "Justin gateteghe a un nouvel adversaire pour l'ufc 313 avec rafael fiziev",
+                                "fffqsdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffsf",
+                                "",
+                                2,
+                                "du 06/02/2025",
+                                0
+                            ),
+                            ArticleResponseDto(
+                                1,
+                                "Justin gateteghe a un nouvel adversaire pour l'ufc 313 avec rafael fiziev",
+                                "fffqsdfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffsf",
+                                "",
+                                2,
+                                "du 06/02/2025",
+                                0
+                            )
+                        )
+                    ),
+                    onDelete = {},
+                    isAuthor = {true},
+                    onClickItem = { x,y -> false}
                 )
             },
-            bottomBar = { BottomBarHome(listOptions = options, selectedOption =selectedOption )}
+            bottomBar = {
+                BottomBarHome(
+                    listOptions = categoriesHomeFilter,
+                    selectedOption = Category.Diverse,
+                    onSelectCategory = {}
+                )
+            }
         )
     }
 }
+
+

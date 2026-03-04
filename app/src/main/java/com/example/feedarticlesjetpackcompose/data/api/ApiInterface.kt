@@ -2,8 +2,8 @@ package com.example.feedarticlesjetpackcompose.data.api
 
 
 import com.example.feedarticlesjetpackcompose.data.dto.request.AuthRequestDto
-import com.example.feedarticlesjetpackcompose.data.dto.request.PostArticleDto
-import com.example.feedarticlesjetpackcompose.data.dto.request.UpdateArticleDto
+import com.example.feedarticlesjetpackcompose.data.dto.request.PostArticleRequestDto
+import com.example.feedarticlesjetpackcompose.data.dto.request.UpdateArticleRequestDto
 import com.example.feedarticlesjetpackcompose.data.dto.response.ArticleResponseDto
 import com.example.feedarticlesjetpackcompose.data.dto.response.AuthResponseDto
 import retrofit2.Response
@@ -45,14 +45,14 @@ interface ApiInterface {
     @PUT(ApiRoutes.PUT_NEW_ARTICLE)
     suspend fun postNewArticle(
         @Header("Authorization") authorization: String,
-        @Body article: PostArticleDto
+        @Body article: PostArticleRequestDto
     ): Response<Unit>?
 
     @POST(ApiRoutes.POST_UPDATE_ARTICLE)
     suspend fun updateArticle(
         @Path("id") articleId: Int,
         @Header("Authorization") authorization: String,
-        @Body article: UpdateArticleDto
+        @Body article: UpdateArticleRequestDto
     ): Response<Unit>?
 
 

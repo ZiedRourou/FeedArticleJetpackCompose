@@ -3,7 +3,7 @@ package com.example.feedarticlesjetpackcompose.data.dto.request
 
 import com.squareup.moshi.Json
 
-data class PostArticleDto(
+data class PostArticleRequestDto(
     @Json(name = "title")
     val title: String,
     @Json(name = "desc")

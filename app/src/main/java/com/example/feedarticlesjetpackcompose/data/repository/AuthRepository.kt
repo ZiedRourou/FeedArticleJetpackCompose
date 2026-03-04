@@ -4,7 +4,7 @@ package com.example.feedarticlesjetpackcompose.data.repository
 import com.example.feedarticlesjetpackcompose.data.api.ApiInterface
 import com.example.feedarticlesjetpackcompose.data.dto.request.AuthRequestDto
 import com.example.feedarticlesjetpackcompose.data.dto.response.AuthResponseDto
-
+import com.example.feedarticlesjetpackcompose.utils.Resource
 import javax.inject.Inject
 
 
@@ -19,9 +19,9 @@ class AuthRepository @Inject constructor(
         val response = api.authLogin(loginData.login, loginData.password)
 
         if (response?.code() == 200 || response?.code() == 304) {
-            response.body()?.let {
+            response.body()?.let {loginData ->
                 return Resource.Success(
-                    data = it,
+                    data = loginData,
                     code = response.code()
                 )
             }
@@ -39,9 +39,9 @@ class AuthRepository @Inject constructor(
         val response = api.authRegister(registerData)
 
         if (response?.code() == 200 ) {
-            response.body()?.let {
+            response.body()?.let { loginData ->
                 return Resource.Success(
-                    data = it,
+                    data = loginData,
                     code = response.code()
                 )
             }

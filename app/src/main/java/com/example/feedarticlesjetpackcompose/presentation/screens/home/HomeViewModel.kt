@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.feedarticlesjetpackcompose.data.dto.response.ArticleResponseDto
 import com.example.feedarticlesjetpackcompose.data.local.AuthSharedPref
 import com.example.feedarticlesjetpackcompose.data.repository.ArticleRepository
-import com.example.feedarticlesjetpackcompose.data.repository.Resource
+import com.example.feedarticlesjetpackcompose.utils.Resource
 import com.example.feedarticlesjetpackcompose.presentation.navigation.Screen
 import com.example.feedarticlesjetpackcompose.utils.Category
 import com.example.feedarticlesjetpackcompose.utils.categoriesHomeFilter
@@ -33,7 +33,7 @@ class HomeViewModel @Inject constructor(
             listOf(ArticleResponseDto(0, "", "", "", 0, "", 0)),
 
         val filteredArticles: List<ArticleResponseDto>? = null,
-        val categoriesOptions: Array<Category> = categoriesHomeFilter,
+        val categoriesOptions: ArrayList<Category> = categoriesHomeFilter,
         val selectedCategory: Category = Category.All,
 
         val isLoading: Boolean = false

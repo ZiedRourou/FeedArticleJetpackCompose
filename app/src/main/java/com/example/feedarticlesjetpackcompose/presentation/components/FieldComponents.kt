@@ -6,24 +6,9 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.feedarticlesjetpackcompose.ui.theme.FeedArticlesJetpackComposeTheme
 
-
-@Composable
-fun FAPrimaryTitle(
-    text: String
-) {
-    Text(
-        text = text,
-        color = MaterialTheme.colorScheme.primary,
-        style = MaterialTheme.typography.headlineLarge,
-        fontWeight = FontWeight.Bold
-    )
-}
 
 @Composable
 fun FATextField(
@@ -65,5 +50,4 @@ fun FATextField(
         minLines = minLines ?: 1,
         maxLines = maxLines ?:5
     )
-
 }

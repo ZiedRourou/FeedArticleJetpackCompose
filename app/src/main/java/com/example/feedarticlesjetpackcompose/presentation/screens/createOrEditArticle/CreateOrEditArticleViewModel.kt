@@ -3,11 +3,11 @@ package com.example.feedarticlesjetpackcompose.presentation.screens.createOrEdit
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.feedarticlesjetpackcompose.data.dto.request.PostArticleDto
-import com.example.feedarticlesjetpackcompose.data.dto.request.UpdateArticleDto
+import com.example.feedarticlesjetpackcompose.data.dto.request.PostArticleRequestDto
+import com.example.feedarticlesjetpackcompose.data.dto.request.UpdateArticleRequestDto
 import com.example.feedarticlesjetpackcompose.data.local.AuthSharedPref
 import com.example.feedarticlesjetpackcompose.data.repository.ArticleRepository
-import com.example.feedarticlesjetpackcompose.data.repository.Resource
+import com.example.feedarticlesjetpackcompose.utils.Resource
 import com.example.feedarticlesjetpackcompose.presentation.navigation.Screen
 import com.example.feedarticlesjetpackcompose.utils.Category
 import com.example.feedarticlesjetpackcompose.utils.categoriesEditOrCreate
@@ -35,7 +35,7 @@ class CreateOrEditArticleViewModel @Inject constructor(
         val content: String = "",
         val imageUrl: String = "",
         val selectedCategory: Category = Category.Diverse,
-        val categoriesOptions: List<Category> = listOf(
+        val categoriesOptions: ArrayList<Category> = arrayListOf(
             Category.Sport,
             Category.Anime,
             Category.Diverse
@@ -193,7 +193,7 @@ class CreateOrEditArticleViewModel @Inject constructor(
             val result = withContext(Dispatchers.IO) {
                 articleRepository.updateArticle(
                     articleId = articleFormStateFlow.value.articleId,
-                    updateArticleDto = UpdateArticleDto(
+                    updateArticleDto = UpdateArticleRequestDto(
                         id = articleFormStateFlow.value.articleId,
                         title = articleFormStateFlow.value.title,
                         content = articleFormStateFlow.value.content,
@@ -254,7 +254,7 @@ class CreateOrEditArticleViewModel @Inject constructor(
             val result = withContext(Dispatchers.IO) {
                 articleRepository.postArticle(
                     articleFormStateFlow.value.let {
-                        PostArticleDto(
+                        PostArticleRequestDto(
                             title = it.title,
                             content = it.content,
                             categoryId = it.selectedCategory.id,

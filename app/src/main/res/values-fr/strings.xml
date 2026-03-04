@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FeedArticlesJetpackCompose</string>
+    <string name="app_title">FeedArticle</string>
+    <string name="title_screen_register">Nouveau Compte</string>
+    <string name="label_login_field">Login</string>
+    <string name="title_password_field">Mot de passe</string>
+    <string name="title_password_confirmation">Confirmation mot de passe</string>
+    <string name="title__button_label_register">"S'inscrire "</string>
+    <string name="title_screen_login">Connectez-vous</string>
+    <string name="label_button_login">"Se connecter "</string>
+    <string name="link_redirect_from_login_to_register">Pas de compte ? inscrivez vous !</string>
+    <string name="title_screen_new_article">Nouvel Article</string>
+    <string name="title_screen_edit_article">Edition Article</string>
+    <string name="label_field_article_title">Titre</string>
+    <string name="label_field_article_content">Contenu</string>
+    <string name="label_field_article_image_url">Image URL</string>
+    <string name="label_button_update_article">Mettre a jour</string>
+    <string name="label_button_publish_article">Enregistrer</string>
+</resources>

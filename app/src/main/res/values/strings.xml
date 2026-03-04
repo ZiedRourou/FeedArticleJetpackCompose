@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">FeedArticlesJetpackCompose</string>
+    <string name="app_title">FeedArticle</string>
+    <string name="title_screen_register">New Account</string>
+    <string name="label_login_field">Login</string>
+    <string name="title_password_field">Password</string>
+    <string name="title_password_confirmation">Password confirmation</string>
+    <string name="title__button_label_register">"Register "</string>
+    <string name="title_screen_login">Login</string>
+    <string name="label_button_login">"Login "</string>
+    <string name="link_redirect_from_login_to_register">No Account  ? Register Now !</string>
+    <string name="title_screen_new_article">New Article</string>
+    <string name="title_screen_edit_article">Edit Article</string>
+    <string name="label_field_article_title">Title</string>
+    <string name="label_field_article_content">Content</string>
+    <string name="label_field_article_image_url">Image URL</string>
+    <string name="label_button_update_article">Update</string>
+    <string name="label_button_publish_article">Save</string>
+    <string name="category_label_anime">Manga</string>
+    <string name="category_abel_sport">Sport</string>
+    <string name="category_abel_diverse">Divers</string>
+    <string name="category_abel_all">Tous</string>
 </resources>

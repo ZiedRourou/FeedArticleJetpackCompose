@@ -1,4 +1,4 @@
-package com.example.feedarticlesjetpackcompose.data.repository
+package com.example.feedarticlesjetpackcompose.utils
 
 sealed class Resource<T>(
     val code: Int,

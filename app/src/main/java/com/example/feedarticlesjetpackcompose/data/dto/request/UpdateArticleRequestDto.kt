@@ -3,7 +3,7 @@ package com.example.feedarticlesjetpackcompose.data.dto.request
 
 import com.squareup.moshi.Json
 
-data class UpdateArticleDto(
+data class UpdateArticleRequestDto(
     @Json(name = "id")
     val id: Int,
     @Json(name = "title")

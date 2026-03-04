@@ -14,7 +14,6 @@ class AuthSharedPref(context: Context) {
 
     fun isLogin(): Boolean = sharedPreference.getBoolean(KEY_IS_LOGIN, false)
 
-
     fun saveUserInfo(
         token: String, userId: Int
     ) {

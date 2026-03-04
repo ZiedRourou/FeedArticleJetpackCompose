@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.feedarticlesjetpackcompose.data.dto.request.AuthRequestDto
 import com.example.feedarticlesjetpackcompose.data.local.AuthSharedPref
 import com.example.feedarticlesjetpackcompose.data.repository.AuthRepository
-import com.example.feedarticlesjetpackcompose.data.repository.Resource
+import com.example.feedarticlesjetpackcompose.utils.Resource
 import com.example.feedarticlesjetpackcompose.presentation.navigation.Screen
-import com.example.feedarticlesjetpackcompose.utils.STRONG_PASSWORD
+import com.example.feedarticlesjetpackcompose.utils.STRONG_PASSWORD_REGEX
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -152,7 +152,7 @@ class LoginViewModel @Inject constructor(
                 loginData.value.password.isBlank() ->
                     loginData.update { it.copy(passwordError = "Mot de passe requis")}
 
-                !Regex(STRONG_PASSWORD).matches(loginData.value.password) ->
+                !Regex(STRONG_PASSWORD_REGEX).matches(loginData.value.password) ->
                     isValid = false
 
                 else -> {

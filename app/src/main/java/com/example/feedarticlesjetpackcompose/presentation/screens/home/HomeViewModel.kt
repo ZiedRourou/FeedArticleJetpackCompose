@@ -1,17 +1,17 @@
 package com.example.feedarticlesjetpackcompose.presentation.screens.home;
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.feedarticlesjetpackcompose.R
 import com.example.feedarticlesjetpackcompose.data.dto.response.ArticleResponseDto
 import com.example.feedarticlesjetpackcompose.data.local.AuthSharedPref
 import com.example.feedarticlesjetpackcompose.data.repository.ArticleRepository
 import com.example.feedarticlesjetpackcompose.utils.Resource
 import com.example.feedarticlesjetpackcompose.presentation.navigation.Screen
+import com.example.feedarticlesjetpackcompose.presentation.screens.common.FeedArticleEventState
 import com.example.feedarticlesjetpackcompose.utils.Category
 import com.example.feedarticlesjetpackcompose.utils.categoriesHomeFilter
 import javax.inject.Inject;
-
 import dagger.hilt.android.lifecycle.HiltViewModel;
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,9 +29,6 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     data class HomeState(
-        val listArticles: List<ArticleResponseDto> =
-            listOf(ArticleResponseDto(0, "", "", "", 0, "", 0)),
-
         val filteredArticles: List<ArticleResponseDto>? = null,
         val categoriesOptions: ArrayList<Category> = categoriesHomeFilter,
         val selectedCategory: Category = Category.All,
@@ -39,16 +36,13 @@ class HomeViewModel @Inject constructor(
         val isLoading: Boolean = false
     )
 
-    sealed class HomeEventState {
-        data class ShowError(val message: String) : HomeEventState()
-        data class RedirectScreen(val screen: Screen) : HomeEventState()
-        data class RedirectEditScreen(val screen: String) : HomeEventState()
-    }
+    private val _originalListArticlesStateFlow =
+        MutableStateFlow<List<ArticleResponseDto>?>(null  )
 
     private val _homeStateFlow = MutableStateFlow(HomeState())
     val homeStateFlow = _homeStateFlow.asStateFlow()
 
-    private val _homeEventSharedFlow = MutableSharedFlow<HomeEventState>()
+    private val _homeEventSharedFlow = MutableSharedFlow<FeedArticleEventState>()
     val homeEventSharedFlow = _homeEventSharedFlow.asSharedFlow()
 
 
@@ -59,48 +53,57 @@ class HomeViewModel @Inject constructor(
     fun navigateToAddArticle() {
         viewModelScope.launch {
             _homeEventSharedFlow.emit(
-                HomeEventState.RedirectScreen(Screen.CreateArticle)
+                FeedArticleEventState.RedirectWithCallbackScreen(Screen.CreateArticle.route)
             )
         }
     }
 
-
     fun logout() {
 
         authSharedPref.clearLogin()
-
         viewModelScope.launch {
             _homeEventSharedFlow.emit(
-                HomeEventState.RedirectScreen(Screen.Login)
+                FeedArticleEventState.RedirectScreen(Screen.Login)
             )
         }
     }
 
     fun isAuthor(authorId: Int) = authSharedPref.getUserId() == authorId
-    fun onClickItem(currentExpandable : Boolean , article: ArticleResponseDto) : Boolean {
-        if(authSharedPref.getUserId() == article.idUserAuthor){
+
+    fun onClickItem(
+        currentExpandable: Boolean,
+        article: ArticleResponseDto
+    ): Boolean {
+
+        if (authSharedPref.getUserId() == article.idUserAuthor) {
             viewModelScope.launch {
                 _homeEventSharedFlow.emit(
-                    HomeEventState.RedirectEditScreen("${Screen.EditArticle.route}/${article.id}")
+                    FeedArticleEventState.RedirectWithCallbackScreen("${Screen.EditArticle.route}/${article.id}")
                 )
             }
             return false
         }
-         return !currentExpandable
+        return !currentExpandable
     }
 
     fun onSelectCategory(category: Category) {
         _homeStateFlow.update {
             it.copy(
                 selectedCategory = category,
-                filteredArticles = homeStateFlow.value.listArticles.filter { article ->
+                filteredArticles = _originalListArticlesStateFlow.value?.filter { article ->
                     if (category.id != 0) article.categoryId == category.id else true
                 }
             )
         }
     }
 
-    private fun fetchArticles() {
+    fun fetchArticles() {
+
+        _homeStateFlow.update {
+            it.copy(
+                isLoading = true
+            )
+        }
 
         viewModelScope.launch {
 
@@ -119,10 +122,10 @@ class HomeViewModel @Inject constructor(
                     result.data?.let { articles ->
                         _homeStateFlow.update {
                             it.copy(
-                                listArticles = articles,
-                                filteredArticles = articles
+                                filteredArticles = articles,
                             )
                         }
+                        _originalListArticlesStateFlow.update { articles }
                     }
                 }
 
@@ -133,9 +136,8 @@ class HomeViewModel @Inject constructor(
                         )
                     }
                     _homeEventSharedFlow.emit(
-                        HomeEventState.ShowError("Erreur serveur")
+                        FeedArticleEventState.ShowMessageSnackBar(result.message)
                     )
-                    Log.e("Login view Model", result.code.toString())
                 }
             }
         }
@@ -143,6 +145,12 @@ class HomeViewModel @Inject constructor(
 
 
     fun onDeleteArticle(articleId: Int) {
+
+        _homeStateFlow.update {
+            it.copy(
+                isLoading = true
+            )
+        }
 
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
@@ -159,7 +167,7 @@ class HomeViewModel @Inject constructor(
                     }
 
                     _homeEventSharedFlow.emit(
-                        HomeEventState.ShowError("Article supprimé")
+                        FeedArticleEventState.ShowMessageSnackBar(R.string.article_delete_message)
                     )
                     fetchArticles()
 
@@ -172,14 +180,10 @@ class HomeViewModel @Inject constructor(
                         )
                     }
                     _homeEventSharedFlow.emit(
-                        HomeEventState.ShowError("Erreur serveur")
+                        FeedArticleEventState.ShowMessageSnackBar(result.message)
                     )
-                    Log.e("Login view Model", result.code.toString())
                 }
             }
         }
-
     }
-
-
 }

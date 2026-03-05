@@ -17,4 +17,20 @@
     <string name="label_field_article_image_url">Image URL</string>
     <string name="label_button_update_article">Mettre a jour</string>
     <string name="label_button_publish_article">Enregistrer</string>
+    <string name="category_label_anime">Manga</string>
+    <string name="category_abel_sport">Sport</string>
+    <string name="category_abel_diverse">Divers</string>
+    <string name="category_abel_all">Tous</string>
+    <string name="login_wrong_info_error">user inconnu (mauvais login/mdp)</string>
+    <string name="error_server">erreur serveur contactez un admin</string>
+    <string name="error_login_already_used">Login déjà utilisé</string>
+    <string name="login_field_supporting_text_login_required">Login requis</string>
+    <string name="password_field_supporting_text_password_required">Mot de passe requis</string>
+    <string name="password_field_supporting_text_strong_password_required">Mdp pas assez fort : 8 caractères, une majuscule, une minuscule, un chiffre et caractère (!#@))</string>
+    <string name="confirm_password_field_supporting_text_login_required">confirmation mdp requise</string>
+    <string name="error_server_you_will_be_decconnected">"vous allez etre déconnecter "</string>
+    <string name="title_article_field_error_supporting_text">Titre requis</string>
+    <string name="content_article_field_error_supporting_text">Contenu requis</string>
+    <string name="title_error_max_character">taille max 80 caractères</string>
+    <string name="article_delete_message">Article supprimé</string>
 </resources>

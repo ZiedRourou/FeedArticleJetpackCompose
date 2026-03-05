@@ -1,5 +1,6 @@
 package com.example.feedarticlesjetpackcompose.presentation.screens.createOrEditArticle
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.onFocusedBoundsChanged
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,6 +19,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,10 +34,12 @@ import com.example.feedarticlesjetpackcompose.presentation.components.FAPrimaryB
 import com.example.feedarticlesjetpackcompose.presentation.components.FAPrimaryTitle
 import com.example.feedarticlesjetpackcompose.presentation.components.FARadioGroupButtonCategories
 import com.example.feedarticlesjetpackcompose.presentation.components.FATextField
+import com.example.feedarticlesjetpackcompose.presentation.components.LoadingOverlay
 import com.example.feedarticlesjetpackcompose.ui.theme.FeedArticlesJetpackComposeTheme
 import com.example.feedarticlesjetpackcompose.utils.Category
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun CreateArticleContent(
     paddingValues: PaddingValues,
@@ -39,9 +49,9 @@ fun CreateArticleContent(
     onChangeContent: (String) -> Unit,
     onChangeImageUrl: (String) -> Unit,
     onSelectCategory: (Category) -> Unit
-
 ) {
     var imageCheck by rememberSaveable { mutableStateOf("") }
+    LoadingOverlay(isVisible = articleInfoState.isLoading)
 
     Column(
         verticalArrangement = Arrangement.SpaceAround,
@@ -64,6 +74,7 @@ fun CreateArticleContent(
             onValueChange = onChangeTitle,
             isError = articleInfoState.titleError != null,
             supportingText = articleInfoState.titleError,
+            modifier = Modifier.width(280.dp)
         )
 
         FATextField(
@@ -72,23 +83,26 @@ fun CreateArticleContent(
             onValueChange = onChangeContent,
             isError = articleInfoState.contentError != null,
             supportingText = articleInfoState.contentError,
-            minLines = 5
+            minLines = 5,
+            modifier = Modifier.width(280.dp)
         )
 
         FATextField(
             label = stringResource(R.string.label_field_article_image_url),
             value = articleInfoState.imageUrl,
             onValueChange = onChangeImageUrl,
-            modifier = Modifier.onFocusChanged {
-                imageCheck = articleInfoState.imageUrl
-            }
+            modifier = Modifier
+                .onFocusedBoundsChanged {
+                    imageCheck = articleInfoState.imageUrl
+                }
+                .width(280.dp),
+            singleLine = true
         )
 
         FADisplayImageOrPlaceHolder(
             image = imageCheck,
-            onError = onChangeImageUrl,
             placeholder = R.drawable.feedarticles_logo,
-            errorImage = R.drawable.ic_launcher_foreground
+            errorImage = R.drawable.baseline_error_outline_24
         )
 
         Row {
@@ -105,7 +119,8 @@ fun CreateArticleContent(
                 R.string.label_button_publish_article
             ),
             modifier = Modifier.width(250.dp),
-            isActive = !articleInfoState.isLoading
+            isActive = !articleInfoState.isLoading &&
+                    (articleInfoState.contentError == null && articleInfoState.titleError == null && articleInfoState.title.isNotEmpty() && articleInfoState.content.isNotEmpty())
         )
     }
 }

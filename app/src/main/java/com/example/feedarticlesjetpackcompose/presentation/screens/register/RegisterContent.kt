@@ -24,6 +24,7 @@ import com.example.feedarticlesjetpackcompose.R
 import com.example.feedarticlesjetpackcompose.presentation.components.FAPrimaryButton
 import com.example.feedarticlesjetpackcompose.presentation.components.FAPrimaryTitle
 import com.example.feedarticlesjetpackcompose.presentation.components.FATextField
+import com.example.feedarticlesjetpackcompose.presentation.components.LoadingOverlay
 import com.example.feedarticlesjetpackcompose.ui.theme.FeedArticlesJetpackComposeTheme
 
 
@@ -36,6 +37,7 @@ fun RegisterContent(
     onConfirmPasswordChange: (String) -> Unit,
     onSubmitForm: () -> Unit,
 ) {
+    LoadingOverlay(isVisible = userRegister.isLoading)
 
     Column(
         verticalArrangement = Arrangement.SpaceAround,
@@ -57,7 +59,9 @@ fun RegisterContent(
                 value = userRegister.login,
                 onValueChange = onLoginChange,
                 isError = userRegister.loginError != null,
-                supportingText = userRegister.loginError
+                supportingText = userRegister.loginError,
+                modifier = Modifier.width(280.dp),
+                singleLine = true
             )
 
             FATextField(
@@ -67,6 +71,8 @@ fun RegisterContent(
                 isPassword = true,
                 isError = userRegister.passwordError != null,
                 supportingText = userRegister.passwordError,
+                modifier = Modifier.width(280.dp),
+                singleLine = true
             )
             FATextField(
                 label = stringResource(R.string.title_password_confirmation),
@@ -75,6 +81,8 @@ fun RegisterContent(
                 isPassword = true,
                 isError = userRegister.confirmPasswordError != null,
                 supportingText = userRegister.confirmPasswordError,
+                modifier = Modifier.width(280.dp),
+                singleLine = true
             )
         }
 

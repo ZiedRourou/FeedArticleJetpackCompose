@@ -1,15 +1,17 @@
 package com.example.feedarticlesjetpackcompose.presentation.screens.login
 
-import android.util.Log
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.feedarticlesjetpackcompose.R
 import com.example.feedarticlesjetpackcompose.data.dto.request.AuthRequestDto
 import com.example.feedarticlesjetpackcompose.data.local.AuthSharedPref
 import com.example.feedarticlesjetpackcompose.data.repository.AuthRepository
 import com.example.feedarticlesjetpackcompose.utils.Resource
 import com.example.feedarticlesjetpackcompose.presentation.navigation.Screen
-import com.example.feedarticlesjetpackcompose.utils.STRONG_PASSWORD_REGEX
+import com.example.feedarticlesjetpackcompose.presentation.screens.common.FeedArticleEventState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import com.example.feedarticlesjetpackcompose.utils.isStrongPassword
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,27 +32,21 @@ class LoginViewModel @Inject constructor(
         val login: String = "",
         val password: String = "",
 
-        val loginError: String? = null,
-        val passwordError: String? = null,
+        val loginError: Int? = null,
+        val passwordError: Int? = null,
 
         val isLoading: Boolean = false
     )
 
-    sealed class LoginEventState {
-        data class ShowError(val message: String) : LoginEventState()
-        data class RedirectScreen(val screen: Screen) : LoginEventState()
-    }
+    private val _loginUserInfoStateFlow = MutableStateFlow(LoginInfoState())
+    val loginUserStateFlow = _loginUserInfoStateFlow.asStateFlow()
 
-
-    private val _loginUserInfo = MutableStateFlow(LoginInfoState())
-    val loginUserInfo = _loginUserInfo.asStateFlow()
-
-    private val _loginEventSharedFlow = MutableSharedFlow<LoginEventState>()
+    private val _loginEventSharedFlow = MutableSharedFlow<FeedArticleEventState>()
     val loginEventSharedFlow = _loginEventSharedFlow.asSharedFlow()
 
 
     fun onLoginChange(login: String) {
-        _loginUserInfo.update {
+        _loginUserInfoStateFlow.update {
             it.copy(
                 login = login
             )
@@ -58,7 +54,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun onPasswordChange(password: String) {
-        _loginUserInfo.update {
+        _loginUserInfoStateFlow.update {
             it.copy(
                 password = password
             )
@@ -68,7 +64,7 @@ class LoginViewModel @Inject constructor(
     fun onRegisterScreen() {
         viewModelScope.launch {
             _loginEventSharedFlow.emit(
-                LoginEventState.RedirectScreen(Screen.Register)
+                FeedArticleEventState.RedirectScreen(Screen.Register)
             )
         }
     }
@@ -80,7 +76,7 @@ class LoginViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            _loginUserInfo.update {
+            _loginUserInfoStateFlow.update {
                 it.copy(
                     isLoading = true
                 )
@@ -89,16 +85,15 @@ class LoginViewModel @Inject constructor(
             val result = withContext(Dispatchers.IO) {
                 authRepository.loginUser(
                     AuthRequestDto(
-                        login = loginUserInfo.value.login,
-                        password = loginUserInfo.value.password,
-
-                        )
+                        login = loginUserStateFlow.value.login,
+                        password = loginUserStateFlow.value.password,
+                    )
                 )
             }
-            when (result) {
 
+            when (result) {
                 is Resource.Success -> {
-                    _loginUserInfo.update {
+                    _loginUserInfoStateFlow.update {
                         it.copy(
                             isLoading = false
                         )
@@ -111,29 +106,21 @@ class LoginViewModel @Inject constructor(
                             )
                         }
                         _loginEventSharedFlow.emit(
-                            LoginEventState.RedirectScreen(Screen.Home)
+                            FeedArticleEventState.RedirectScreen(Screen.Home)
                         )
                     }
                 }
 
                 is Resource.Error -> {
-                    _loginUserInfo.update {
+                    _loginUserInfoStateFlow.update {
                         it.copy(
                             isLoading = false
                         )
                     }
 
-                    val message = when (result.code) {
-                        401 -> "user inconnu (mauvais login/mdp)"
-                        else -> "Erreur serveur"
-                    }
-
                     _loginEventSharedFlow.emit(
-                        LoginEventState.ShowError(message)
+                        FeedArticleEventState.ShowMessageSnackBar(result.message)
                     )
-
-                    if (result.code != 401)
-                        Log.e("Login view Model", result.code.toString())
                 }
             }
         }
@@ -142,28 +129,36 @@ class LoginViewModel @Inject constructor(
 
     private fun validateLoginData(): Boolean {
 
-        var isValid = false
+        val currentData = loginUserStateFlow.value
 
-        _loginUserInfo.let { loginData ->
-            when {
-                loginData.value.login.isBlank() ->
-                    loginData.update { it.copy(loginError ="Login requis") }
-
-                loginData.value.password.isBlank() ->
-                    loginData.update { it.copy(passwordError = "Mot de passe requis")}
-
-                !Regex(STRONG_PASSWORD_REGEX).matches(loginData.value.password) ->
-                    isValid = false
-
-                else -> {
-                    isValid = true
+        _loginUserInfoStateFlow.update {
+            it.copy(
+                loginError = when {
+                    currentData.login.isEmpty() -> R.string.login_field_supporting_text_login_required
+                    else -> null
+                },
+                passwordError = when {
+                    currentData.password.isEmpty() -> R.string.password_field_supporting_text_password_required
+                    else -> null
                 }
-            }
+            )
         }
 
-        return isValid
+        currentData.let {
+
+            if (it.loginError != null || it.passwordError != null)
+                return false
+
+            if(!it.password.isStrongPassword()){
+                viewModelScope.launch {
+                    _loginEventSharedFlow.emit(
+                        FeedArticleEventState.ShowMessageSnackBar(R.string.login_wrong_info_error)
+                    )
+                }
+                return false
+            }
+        }
+        return true
     }
-
-
 }
 

@@ -1,8 +1,11 @@
 package com.example.feedarticlesjetpackcompose.utils
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import com.example.feedarticlesjetpackcompose.R
+import com.example.feedarticlesjetpackcompose.ui.theme.AnimeColor
+import com.example.feedarticlesjetpackcompose.ui.theme.DiversColor
+import com.example.feedarticlesjetpackcompose.ui.theme.OtherColor
+import com.example.feedarticlesjetpackcompose.ui.theme.SportColor
 
 
 const val KEY_FILENAME = "sharePreferencesAuth"
@@ -19,10 +22,10 @@ sealed class Category(
     val id: Int,
     val color: Color
 ) {
-    data object Anime : Category(R.string.category_label_anime, 1, Color.Red)
-    data object Sport : Category(R.string.category_abel_sport, 2, Color.LightGray)
-    data object Diverse : Category(R.string.category_abel_diverse, 3, Color.Yellow)
-    data object All : Category(R.string.category_abel_all, 0, Color.Blue)
+    data object Anime : Category(R.string.category_label_anime, 1, AnimeColor)
+    data object Sport : Category(R.string.category_abel_sport, 2, SportColor)
+    data object Diverse : Category(R.string.category_abel_diverse, 3, DiversColor)
+    data object All : Category(R.string.category_abel_all, 0, OtherColor)
 }
 
 val categoriesEditOrCreate  = arrayListOf(Category.Anime,Category.Sport,Category.Diverse)

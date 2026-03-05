@@ -25,6 +25,7 @@ import com.example.feedarticlesjetpackcompose.presentation.components.FAPrimaryB
 import com.example.feedarticlesjetpackcompose.presentation.components.FATextLink
 import com.example.feedarticlesjetpackcompose.presentation.components.FAPrimaryTitle
 import com.example.feedarticlesjetpackcompose.presentation.components.FATextField
+import com.example.feedarticlesjetpackcompose.presentation.components.LoadingOverlay
 import com.example.feedarticlesjetpackcompose.ui.theme.FeedArticlesJetpackComposeTheme
 
 
@@ -38,6 +39,7 @@ fun LoginContent(
     onRegisterScreen: () -> Unit
 ) {
 
+    LoadingOverlay(isVisible = userLogin.isLoading)
     Column(
         verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -58,7 +60,9 @@ fun LoginContent(
                 value = userLogin.login,
                 onValueChange = onLoginChange,
                 isError = userLogin.loginError != null,
-                supportingText = userLogin.loginError
+                supportingText = userLogin.loginError,
+                modifier = Modifier.width(280.dp),
+                singleLine = true
             )
 
             FATextField(
@@ -68,6 +72,8 @@ fun LoginContent(
                 isPassword = true,
                 isError = userLogin.passwordError != null,
                 supportingText = userLogin.passwordError,
+                modifier = Modifier.width(280.dp),
+                singleLine = true
             )
         }
 
@@ -82,7 +88,6 @@ fun LoginContent(
                 onClick = { onSubmitForm() },
                 title = stringResource(R.string.label_button_login),
                 modifier = Modifier.width(150.dp),
-                isActive = !userLogin.isLoading
             )
             FATextLink(
                 onClick = { onRegisterScreen() },

@@ -6,6 +6,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 
@@ -17,10 +18,10 @@ fun FATextField(
     isError: Boolean = false,
     label: String,
     isPassword: Boolean = false,
-    supportingText: String? = null,
+    supportingText: Int? = null,
     minLines : Int? = 1,
-    maxLines : Int? = 5,
-    modifier : Modifier? = Modifier
+    modifier : Modifier? = Modifier,
+    singleLine : Boolean? = false
 ) {
 
     TextField(
@@ -44,10 +45,10 @@ fun FATextField(
         ),
         supportingText = {
             supportingText?.let {
-                Text(it)
+                Text(stringResource(it))
             }
         },
         minLines = minLines ?: 1,
-        maxLines = maxLines ?:5
+        singleLine = singleLine ?: false
     )
 }

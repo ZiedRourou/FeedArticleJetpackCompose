@@ -1,6 +1,17 @@
 package com.example.feedarticlesjetpackcompose.presentation.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
@@ -24,29 +36,43 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.feedarticlesjetpackcompose.R
 import com.example.feedarticlesjetpackcompose.data.dto.response.ArticleResponseDto
 import com.example.feedarticlesjetpackcompose.utils.Category
 import com.example.feedarticlesjetpackcompose.utils.categoriesEditOrCreate
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeBox(
     onDelete: () -> Unit,
-    articleItem: @Composable () -> Unit,
-    enableSwipe: Boolean
+    content: @Composable () -> Unit,
+    enableSwipeVM: Boolean
 ) {
-    val swipeState = rememberSwipeToDismissBoxState()
+    var enableSwipe by remember { mutableStateOf(enableSwipeVM) }
+
+    val swipeState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { state ->
+            if (state == SwipeToDismissBoxValue.EndToStart) {
+                onDelete()
+                enableSwipe= false
+            }
+            true
+        }
+    )
 
     SwipeToDismissBox(
         modifier = Modifier.padding(horizontal = 10.dp),
@@ -56,6 +82,7 @@ fun SwipeBox(
                 contentAlignment = Alignment.CenterEnd,
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(5.dp)
                     .background(MaterialTheme.colorScheme.errorContainer)
             ) {
                 Icon(
@@ -67,11 +94,8 @@ fun SwipeBox(
         enableDismissFromStartToEnd = false,
         enableDismissFromEndToStart = enableSwipe
     ) {
-        articleItem()
+        content()
     }
-
-    if (swipeState.currentValue == SwipeToDismissBoxValue.EndToStart)
-        onDelete()
 }
 
 
@@ -82,30 +106,36 @@ fun ItemArticle(
 ) {
     var expandedState by remember { mutableStateOf(false) }
 
+    val animatedSize by animateDpAsState(
+        targetValue = if(expandedState) 80.dp else 50.dp,
+        animationSpec = tween(500, easing = LinearOutSlowInEasing),
+        label = ""
+    )
+
     Card(
         modifier = Modifier.fillMaxSize(),
         colors = CardDefaults.cardColors(
             categoriesEditOrCreate.firstOrNull { it.id == article.categoryId }?.color
                 ?: Color.LightGray
         ),
-
         onClick = {
             expandedState = onClick(expandedState, article)
         },
+
     ) {
         Row(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.Start
         ) {
 
             FADisplayImageOrPlaceHolder(
                 image = article.urlImage,
                 errorImage = R.drawable.feedarticles_logo,
                 placeholder = R.drawable.feedarticles_logo,
-                imageSize = 50.dp
+                imageSize = animatedSize
             )
 
             Spacer(modifier = Modifier.width(5.dp))
@@ -117,7 +147,11 @@ fun ItemArticle(
             )
         }
 
-        if (expandedState) {
+        AnimatedVisibility(
+            visible = expandedState,
+            enter = fadeIn() +  expandVertically(),
+            exit = fadeOut() + slideOutVertically()
+        ) {
             ArticleDetail(
                 date = article.createdAt,
                 content = article.content,
@@ -135,7 +169,8 @@ fun ArticleDetail(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp),
+            .padding(10.dp).
+            animateContentSize(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {

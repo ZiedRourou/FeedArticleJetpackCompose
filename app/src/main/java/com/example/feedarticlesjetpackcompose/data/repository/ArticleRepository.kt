@@ -1,5 +1,6 @@
 package com.example.feedarticlesjetpackcompose.data.repository
 
+import com.example.feedarticlesjetpackcompose.R
 import com.example.feedarticlesjetpackcompose.data.api.ApiInterface
 import com.example.feedarticlesjetpackcompose.data.dto.request.PostArticleRequestDto
 import com.example.feedarticlesjetpackcompose.data.dto.request.UpdateArticleRequestDto
@@ -26,8 +27,12 @@ class ArticleRepository @Inject constructor(
                 code = response.code()
             )
         } else
-            return Resource.Error(response?.code() ?: 400)
+            return Resource.Error(
+                code = response?.code() ?: 400,
+                message = R.string.error_server
+            )
     }
+
 
     suspend fun getAllArticles(): Resource<List<ArticleResponseDto>> {
 
@@ -41,22 +46,27 @@ class ArticleRepository @Inject constructor(
                 )
             }
         } else
-            return Resource.Error(response?.code() ?: 400)
-
-        return Resource.Error(400)
+            return Resource.Error(
+                code = response?.code() ?: 400,
+                message = R.string.error_server
+            )
+        return Resource.Error(400, R.string.error_server)
     }
 
     suspend fun deleteArticle(articleId: Int): Resource<Unit> {
 
         val response = api.deleteArticle(bearerToken, articleId)
 
-        if (response?.code() == 201) {
+        if (response?.code() == 201)
             return Resource.Success(
                 data = null,
                 code = response.code()
             )
-        } else
-            return Resource.Error(response?.code() ?: 400)
+        else
+            return Resource.Error(
+                code = response?.code() ?: 400,
+                message = R.string.error_server
+            )
     }
 
     suspend fun getArticleById(
@@ -73,9 +83,11 @@ class ArticleRepository @Inject constructor(
                 )
             }
         } else
-            return Resource.Error(response?.code() ?: 400)
-
-        return Resource.Error(400)
+            return Resource.Error(
+                code = response?.code() ?: 400,
+                message = R.string.error_server
+            )
+        return Resource.Error(400, R.string.error_server)
     }
 
     suspend fun updateArticle(
@@ -91,6 +103,9 @@ class ArticleRepository @Inject constructor(
                 code = response.code()
             )
         } else
-            return Resource.Error(response?.code() ?: 400)
+            return Resource.Error(
+                code = response?.code() ?: 400,
+                message = R.string.error_server
+            )
     }
 }

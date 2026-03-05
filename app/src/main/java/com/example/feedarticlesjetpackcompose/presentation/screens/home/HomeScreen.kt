@@ -9,8 +9,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.example.feedarticlesjetpackcompose.presentation.navigation.Screen
+import com.example.feedarticlesjetpackcompose.presentation.screens.common.FeedArticleEventState
+import com.example.feedarticlesjetpackcompose.utils.navigateForResult
 
 
 @Composable
@@ -19,6 +22,7 @@ fun HomeScreen(
     viewModel: HomeViewModel
 ) {
 
+    val context = LocalContext.current
     val articles by viewModel.homeStateFlow.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
 
@@ -26,21 +30,29 @@ fun HomeScreen(
         viewModel.homeEventSharedFlow.collect { event ->
             when (event) {
 
-                is HomeViewModel.HomeEventState.ShowError ->
-                    snackBarHostState.showSnackbar(event.message)
+                is FeedArticleEventState.ShowMessageSnackBar ->
+                    snackBarHostState.showSnackbar(context.getString(event.message))
 
-                is HomeViewModel.HomeEventState.RedirectScreen -> {
-                    if (event.screen is Screen.Login) {
-                        navController.navigate(event.screen.route) {
-                            popUpTo(Screen.Home.route) { inclusive = true }
+                is FeedArticleEventState.RedirectWithCallbackScreen -> {
+                    navController.navigateForResult<Boolean>(
+                        route = event.route,
+                        navResultCallback = { isFetchResult ->
+                            if(isFetchResult){
+                                viewModel.fetchArticles()
+                            }
                         }
-                    } else
-                        navController.navigate(event.screen.route)
+                    )
                 }
 
-                is HomeViewModel.HomeEventState.RedirectEditScreen -> {
-                    navController.navigate(event.screen)
+                is FeedArticleEventState.RedirectScreen -> {
+                    navController.navigate(event.screen.route) {
+                        if (event.screen is Screen.Login)
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                    }
                 }
+
+
+                else -> {}
             }
         }
     }
@@ -62,7 +74,7 @@ fun HomeScreen(
                 articles,
                 onDelete = viewModel::onDeleteArticle,
                 isAuthor = viewModel::isAuthor,
-                onClickItem = viewModel::onClickItem
+                onClickItem = viewModel::onClickItem,
             )
         },
 

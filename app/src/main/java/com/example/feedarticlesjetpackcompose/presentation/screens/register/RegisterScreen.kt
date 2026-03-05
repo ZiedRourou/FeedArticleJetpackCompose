@@ -9,8 +9,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.example.feedarticlesjetpackcompose.presentation.navigation.Screen
+import com.example.feedarticlesjetpackcompose.presentation.screens.common.FeedArticleEventState
 
 
 @Composable
@@ -18,20 +20,24 @@ fun RegisterScreen(
     navController: NavController,
     viewModel: RegisterViewModel
 ) {
-    val userRegisterInfo by viewModel.registerUserInfo.collectAsState()
+    val context = LocalContext.current
+
+    val userRegisterInfo by viewModel.registerUserInfoStateFlow.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect("single") {
         viewModel.registerEventSharedFlow.collect { event ->
             when (event) {
 
-                is RegisterViewModel.RegisterEventState.ShowError ->
-                    snackBarHostState.showSnackbar(event.message)
+                is FeedArticleEventState.ShowMessageSnackBar ->
+                    snackBarHostState.showSnackbar(context.getString(event.message))
 
-                is RegisterViewModel.RegisterEventState.RedirectScreen ->
+                is FeedArticleEventState.RedirectScreen ->
                     navController.navigate(event.screen.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
+
+                else -> {}
             }
         }
     }

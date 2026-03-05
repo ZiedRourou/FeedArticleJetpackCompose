@@ -19,5 +19,18 @@
     <string name="category_label_anime">Manga</string>
     <string name="category_abel_sport">Sport</string>
     <string name="category_abel_diverse">Divers</string>
-    <string name="category_abel_all">Tous</string>
+    <string name="category_abel_all">All</string>
+    <string name="login_wrong_info_error">wrong logi / password</string>
+    <string name="error_server">error pleases retry or contact admin</string>
+    <string name="error_login_already_used">Login alredy used</string>
+    <string name="login_field_supporting_text_login_required">Login required</string>
+    <string name="password_field_supporting_text_password_required">Password required</string>
+    <string name="password_field_supporting_text_strong_password_required">Strong password required : 1 number, 1 uppercase  and (!#@))</string>
+    <string name="confirm_password_field_supporting_text_login_required">confirm password required</string>
+    <string name="error_server_you_will_be_decconnected">Error you will be deconnected</string>
+    <string name="title_article_field_error_supporting_text">Title required</string>
+    <string name="content_article_field_error_supporting_text">Contenu required</string>
+    <string name="title_error_max_character">Max length 80</string>
+    <string name="article_delete_message">Article deleted</string>
+
 </resources>

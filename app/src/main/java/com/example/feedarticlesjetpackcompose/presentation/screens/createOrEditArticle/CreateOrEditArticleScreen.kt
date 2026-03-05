@@ -9,8 +9,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.example.feedarticlesjetpackcompose.presentation.navigation.Screen
+import com.example.feedarticlesjetpackcompose.presentation.screens.common.FeedArticleEventState
+import com.example.feedarticlesjetpackcompose.utils.popBackStackWithResult
 
 @Composable
 fun CreateArticleScreen(
@@ -21,20 +24,26 @@ fun CreateArticleScreen(
 
     viewModel.isAuthor(articleId)
 
+    val context = LocalContext.current
+
     val articleInfo by viewModel.articleFormStateFlow.collectAsState()
     val snackBarHostState = remember { SnackbarHostState() }
     LaunchedEffect("single") {
         viewModel.createArticleEventSharedFlow.collect { event ->
             when (event) {
 
-                is CreateOrEditArticleViewModel.CreateArticleEventState.ShowError ->
-                    snackBarHostState.showSnackbar(event.message)
+                is FeedArticleEventState.ShowMessageSnackBar ->
+                    snackBarHostState.showSnackbar(context.getString(event.message))
 
-                is CreateOrEditArticleViewModel.CreateArticleEventState.RedirectScreen ->
+                is FeedArticleEventState.RedirectScreen ->
                     navController.navigate(event.screen.route) {
                         if (event.screen is Screen.Login)
                             popUpTo(Screen.Home.route) { inclusive = true }
                     }
+                is FeedArticleEventState.PopBackStackWithResult ->
+                    navController.popBackStackWithResult(event.result)
+
+                else -> {}
             }
         }
     }
